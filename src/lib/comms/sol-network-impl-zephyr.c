@@ -35,6 +35,7 @@
 #include <net/net_core.h>
 
 #include "sol-log.h"
+#include "sol-mainloop.h"
 #include "sol-util.h"
 #include "sol-vector.h"
 
