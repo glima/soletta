@@ -7,3 +7,4 @@ config ZEPHYR
     select FEATURE_HW_PWM
     select FEATURE_HW_SPI
     select FEATURE_NETWORK
+    select FEATURE_COAP

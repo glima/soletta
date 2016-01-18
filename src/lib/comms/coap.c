@@ -30,7 +30,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "sol-common-buildopts.h"
+
+#ifndef SOL_PLATFORM_ZEPHYR
 #include <arpa/inet.h>
+#else
+#include <misc/byteorder.h>
+#define ntohs sys_be16_to_cpu
+#define htons sys_cpu_to_be16
+#endif
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
