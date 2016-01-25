@@ -32,13 +32,14 @@
 
 #include <errno.h>
 
+#include <net/ip_buf.h>
+
 #include "sol-log.h"
 #include "sol-mainloop.h"
 #include "sol-mainloop-zephyr.h"
 #include "sol-socket-impl.h"
 #include "sol-vector.h"
-
-#include <net/ip_buf.h>
+#include "sol-network-util.h"
 
 struct sol_socket_zephyr {
     struct sol_socket base;
@@ -125,7 +126,8 @@ sol_socket_zephyr_new(int domain, enum sol_socket_type type, int protocol)
 {
     struct sol_socket_zephyr *socket;
 
-    SOL_INT_CHECK_GOTO(domain, != AF_INET6, unsupported_family);
+    SOL_INT_CHECK_GOTO(domain, != SOL_NETWORK_FAMILY_INET6,
+        unsupported_family);
 
     socket = calloc(1, sizeof(*socket));
     SOL_NULL_CHECK_GOTO(socket, socket_error);
@@ -221,7 +223,7 @@ sol_socket_zephyr_recvmsg(struct sol_socket *s, void *buf, size_t len, struct so
         buflen = len;
 
     if (cliaddr) {
-        cliaddr->family = AF_INET6;
+        cliaddr->family = SOL_NETWORK_FAMILY_INET6;
         cliaddr->port = uip_ntohs(NET_BUF_UDP(netbuf)->srcport);
         memcpy(cliaddr->addr.in6, &NET_BUF_IP(netbuf)->srcipaddr, sizeof(cliaddr->addr.in6));
     }
@@ -281,13 +283,13 @@ sol_socket_zephyr_join_group(struct sol_socket *s, int ifindex, const struct sol
     struct net_tuple *tuple;
     struct net_addr bindaddr;
 
-    if (group->family != AF_INET6)
+    if (group->family != SOL_NETWORK_FAMILY_INET6)
         return -EAFNOSUPPORT;
 
     tuple = net_context_get_tuple(socket->unicast_context);
     SOL_NULL_CHECK(tuple, -EINVAL);
 
-    bindaddr.family = group->family;
+    bindaddr.family = sol_network_sol_to_af(group->family);
     memcpy(&bindaddr.in6_addr, group->addr.in6, sizeof(bindaddr.in6_addr));
 
     ctx = net_context_get(IPPROTO_UDP, NULL, 0, &bindaddr, tuple->local_port);
@@ -305,13 +307,13 @@ sol_socket_zephyr_bind(struct sol_socket *s, const struct sol_network_link_addr 
     struct net_context *ctx;
     struct net_addr bindaddr;
 
-    if (addr->family != AF_INET6)
+    if (addr->family != SOL_NETWORK_FAMILY_INET6)
         return -EAFNOSUPPORT;
 
     if (socket->unicast_context)
         return -EALREADY;
 
-    bindaddr.family = addr->family;
+    bindaddr.family = sol_network_sol_to_af(addr->family);
     memcpy(&bindaddr.in6_addr, addr->addr.in6, sizeof(bindaddr.in6_addr));
 
     ctx = net_context_get(IPPROTO_UDP, NULL, 0, &bindaddr, addr->port);

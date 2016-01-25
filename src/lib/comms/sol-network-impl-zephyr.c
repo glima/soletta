@@ -59,7 +59,7 @@ sol_network_addr_to_str(const struct sol_network_link_addr *addr,
     SOL_NULL_CHECK(addr, NULL);
     SOL_NULL_CHECK(buf, NULL);
 
-    if (addr->family != AF_INET6)
+    if (addr->family != SOL_NETWORK_FAMILY_INET6)
         return NULL;
 
     if (len < 40)
@@ -85,7 +85,7 @@ sol_network_addr_from_str(struct sol_network_link_addr *addr, const char *buf)
     SOL_NULL_CHECK(addr, NULL);
     SOL_NULL_CHECK(buf, NULL);
 
-    if (addr->family != AF_INET6)
+    if (addr->family != SOL_NETWORK_FAMILY_INET6)
         return NULL;
 
     return NULL;
@@ -102,7 +102,7 @@ get_local_address(struct sol_network_link_addr *addr)
 
     tuple = net_context_get_tuple(empty_ctx);
 
-    addr->family = AF_INET6;
+    addr->family = SOL_NETWORK_FAMILY_INET6;
     addr->port = 0;
     memcpy(&addr->addr.in6, &tuple->local_addr->in6_addr, sizeof(addr->addr.in6));
 

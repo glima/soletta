@@ -25,14 +25,17 @@ obj-dtls-$(DTLS)-extra-cflags += \
 
 obj-networking-$(PLATFORM_RIOTOS) += \
     sol-network-impl-riot.o \
+    sol-network-util-impl-riot.o \
     sol-socket-impl-riot.o
 
 obj-networking-$(PLATFORM_LINUX) += \
     sol-network-impl-linux.o \
+    sol-network-util-impl-linux.o \
     sol-socket-impl-linux.o
 
 obj-networking-$(PLATFORM_ZEPHYR) += \
     sol-network-impl-zephyr.o \
+    sol-network-util-impl-zephyr.o \
     sol-socket-impl-zephyr.o
 
 obj-networking-$(PLATFORM_ZEPHYR)-extra-cflags += \
