@@ -166,7 +166,7 @@ sol_socket_zephyr_del(struct sol_socket *s)
 }
 
 static int
-sol_socket_zephyr_set_on_read(struct sol_socket *s, bool (*cb)(void *data, struct sol_socket *s), void *data)
+sol_socket_zephyr_set_on_read(struct sol_socket *s, bool (*cb)(void *data, struct sol_socket *s), const void *data)
 {
     struct sol_socket_zephyr *socket = (struct sol_socket_zephyr *)s;
 
@@ -189,7 +189,7 @@ write_timeout_cb(void *data)
 }
 
 static int
-sol_socket_zephyr_set_on_write(struct sol_socket *s, bool (*cb)(void *data, struct sol_socket *s), void *data)
+sol_socket_zephyr_set_on_write(struct sol_socket *s, bool (*cb)(void *data, struct sol_socket *s), const void *data)
 {
     struct sol_socket_zephyr *socket = (struct sol_socket_zephyr *)s;
 
