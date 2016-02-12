@@ -33,6 +33,7 @@
 #include <errno.h>
 
 #include <net/net_core.h>
+#include <contiki/ip/uiplib.h>
 
 #include "sol-log.h"
 #include "sol-mainloop.h"
@@ -85,10 +86,17 @@ sol_network_addr_from_str(struct sol_network_link_addr *addr, const char *buf)
     SOL_NULL_CHECK(addr, NULL);
     SOL_NULL_CHECK(buf, NULL);
 
+    uip_ip6addr_t ipaddr = { 0 };
+
     if (addr->family != SOL_NETWORK_FAMILY_INET6)
         return NULL;
 
-    return NULL;
+    if (!uiplib_ip6addrconv(buf, &ipaddr))
+        return NULL;
+
+    memcpy(addr->addr.in6, ipaddr.u8, sizeof(addr->addr.in6));
+
+    return addr;
 }
 
 static bool
