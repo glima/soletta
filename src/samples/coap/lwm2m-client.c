@@ -279,7 +279,7 @@ read_security_server_obj(void *instance_data, void *user_data,
     case SECURITY_SERVER_SERVER_URI_RES_ID:
         SOL_LWM2M_RESOURCE_INIT(r, res, 0, 1,
             SOL_LWM2M_RESOURCE_DATA_TYPE_STRING,
-            sol_str_slice_from_str("coap://localhost:5683"));
+            sol_str_slice_from_str("coap://[::1]:5683"));
         break;
     case SECURITY_SERVER_IS_BOOTSTRAP_RES_ID:
         SOL_LWM2M_RESOURCE_INIT(r, res, 1, 1,

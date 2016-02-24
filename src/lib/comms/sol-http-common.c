@@ -626,8 +626,8 @@ _get_authority(const struct sol_str_slice partial_uri,
 {
     struct sol_str_slice auth, port_slice = SOL_STR_SLICE_EMPTY;
     const char *itr, *itr_end, *port_start;
-    size_t discarted = 2;
-    bool parsing_ipv6;
+    size_t discarded = 2;
+    bool parsing_ipv6, done_with_ipv6 = false;
 
     if (!partial_uri.len) {
         SOL_WRN("Empty authority. URI: %.*s", SOL_STR_SLICE_PRINT(full_uri));
@@ -649,10 +649,11 @@ _get_authority(const struct sol_str_slice partial_uri,
 
     for (itr = auth.data, host->data = auth.data; itr < itr_end; itr++) {
         if (*itr == '[') {
-            host->data = itr;
+            host->data = itr + 1;
             parsing_ipv6 = true;
         } else if (*itr == ']') {
             parsing_ipv6 = false;
+            done_with_ipv6 = true;
             host->len = itr - host->data;
         } else if (*itr == '@') {
             *user = *host;
@@ -664,14 +665,16 @@ _get_authority(const struct sol_str_slice partial_uri,
             host->len = 0;
             port_slice.data = "";
             port_slice.len = 0;
-            discarted++;
+            discarded++;
         } else if (*itr == ':' && !parsing_ipv6) {
-            if (host->len > 0)
+            if (host->len > 0 && !done_with_ipv6)
                 return -EINVAL;
-            host->len = itr - host->data;
+
+            if (host->len == 0)
+                host->len = itr - host->data;
             port_start = itr + 1;
             port_slice.data = port_start;
-            discarted++;
+            discarded++;
         } else if (*itr == '/' || *itr == '?' || *itr == '#')
             break;
     }
@@ -702,7 +705,7 @@ _get_authority(const struct sol_str_slice partial_uri,
         SOL_STR_SLICE_PRINT(*pass), SOL_STR_SLICE_PRINT(port_slice));
 
     _update_partial_uri(next,
-        port_slice.len + host->len + pass->len + user->len + discarted);
+        port_slice.len + host->len + pass->len + user->len + discarded);
     return 0;
 }
 
