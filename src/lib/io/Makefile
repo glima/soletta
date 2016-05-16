@@ -90,6 +90,8 @@ obj-io-storage-$(USE_MEMMAP) += \
     sol-memmap-storage.o
 obj-io-storage-$(LINUX) += \
     sol-memmap-storage-impl-linux.o
+obj-io-storage-$(ZEPHYR) += \
+    sol-memmap-storage-impl-zephyr.o
 
 obj-io-ipm-$(USE_IPM) += \
     sol-ipm.o
