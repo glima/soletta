@@ -132,7 +132,8 @@ write_cb(void *data, const char *name, struct sol_blob *blob, int status)
         if (status == -ECANCELED)
             SOL_INF("Writing to [%s] superseeded by another write", name);
         else
-            SOL_WRN("Could not write [%s], error: %d", name, status);
+            SOL_WRN("Could not write [%s], error: %s", name,
+                sol_util_strerrora(-status));
 
         goto end;
     }

@@ -26,7 +26,6 @@
 #include "sol-mainloop.h"
 #include "sol-str-slice.h"
 #include "sol-str-table.h"
-#include "sol-util-file.h"
 #include "sol-util-internal.h"
 #include "sol-vector.h"
 
@@ -45,7 +44,8 @@ sol_memmap_impl_read_raw(struct map_internal *map_internal,
     r = sol_buffer_ensure(buffer, entry->size);
     SOL_INT_CHECK(r, < 0, r);
 
-    r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET, buf->data, entry->size);
+    r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET, buffer->data,
+        entry->size);
     if (r < 0) {
         sol_buffer_fini(buffer);
         SOL_WRN("Flash read failed");
@@ -137,12 +137,12 @@ sol_memmap_impl_perform_pending_writes(void *data)
     struct map_internal *map_internal = data;
     struct pending_write_data *pending;
     struct sol_vector tmp_vector;
-    int i, r;
+    int i;
 
-    map_internal->base.timeout = NULL;
+    map_internal->timeout = NULL;
 
-    tmp_vector = map_internal->base.pending_writes;
-    sol_vector_init(&map_internal->base.pending_writes,
+    tmp_vector = map_internal->pending_writes;
+    sol_vector_init(&map_internal->pending_writes,
         sizeof(struct pending_write_data));
 
     SOL_VECTOR_FOREACH_IDX (&tmp_vector, pending, i) {
@@ -162,6 +162,8 @@ sol_memmap_impl_perform_pending_writes(void *data)
 int
 sol_memmap_impl_init(void)
 {
+    int r;
+
     if (flash_dev)
         return 0;
 
@@ -188,7 +190,7 @@ sol_memmap_impl_map_new(const struct sol_memmap_map *map)
     map_internal = calloc(1, sizeof(*map_internal));
     SOL_NULL_CHECK_ERRNO(map, ENOMEM, NULL);
 
-    map_internal->base.map = map;
+    map_internal->map = map;
 
     return (struct map_internal *)map_internal;
 }
