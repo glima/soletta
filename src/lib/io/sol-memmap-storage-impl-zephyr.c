@@ -41,11 +41,15 @@ sol_memmap_impl_read_raw(struct map_internal *map_internal,
     uint32_t i, j;
     int r;
 
+    printf("sol_memmap_impl_read_raw()\n");
     r = sol_buffer_ensure(buffer, entry->size);
     SOL_INT_CHECK(r, < 0, r);
 
-    r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET, buffer->data,
-        entry->size);
+    //XXX: memory alignmeeeeent!
+    r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET + entry->offset,
+        buffer->data, entry->size);
+    printf("flash_read() on offset %lx (size %d) returned %d\n",
+        FLASH_MEM_REGION_OFFSET + entry->offset, entry->size, r);
     if (r < 0) {
         sol_buffer_fini(buffer);
         SOL_WRN("Flash read failed");
@@ -78,6 +82,7 @@ sol_memmap_impl_write_raw(struct map_internal *map_internal,
 {
     int r = 0;
 
+    printf("sol_memmap_impl_write_raw()\n");
     if (!sol_blob_ref(blob))
         return -errno;
 
@@ -91,8 +96,10 @@ sol_memmap_impl_write_raw(struct map_internal *map_internal,
         for (i = 0, j = 0; i < entry->size; i++, j += 8)
             value |= (uint64_t)((uint8_t *)blob->mem)[i] << j;
 
-        r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET, &old_value,
-            entry->size);
+        r = flash_read(flash_dev, FLASH_MEM_REGION_OFFSET + entry->offset,
+            &old_value, entry->size);
+        printf("flash_read() on offset %lx (size %d) returned %d\n",
+            FLASH_MEM_REGION_OFFSET + entry->offset, entry->size, r);
         if (r < 0) {
             SOL_WRN("Flash read failed");
             goto error;
@@ -102,13 +109,20 @@ sol_memmap_impl_write_raw(struct map_internal *map_internal,
         value &= mask;
         value |= (old_value & ~mask);
 
-        r = flash_write(flash_dev, FLASH_MEM_REGION_OFFSET, &value,
-            entry->size);
+        r = flash_write(flash_dev, FLASH_MEM_REGION_OFFSET + entry->offset,
+            &value, entry->size);
+        printf("flash_write(%" PRId64 ") on offset %lx (size %d) returned %d\n",
+            value, FLASH_MEM_REGION_OFFSET + entry->offset, entry->size, r);
         if (r < 0)
             SOL_WRN("Flash write failed");
     } else {
-        r = flash_write(flash_dev, FLASH_MEM_REGION_OFFSET, blob->mem,
-            sol_util_min(entry->size, blob->size));
+        r = flash_write(flash_dev, FLASH_MEM_REGION_OFFSET + entry->offset,
+            blob->mem, sol_util_min(entry->size, blob->size));
+        printf("flash_write(%.*d) [no mask case]"
+            " on offset %lx (size %d) returned %d\n",
+            sol_util_min(entry->size, blob->size), *(int *)(blob->mem),
+            FLASH_MEM_REGION_OFFSET + entry->offset,
+            sol_util_min(entry->size, blob->size), r);
         if (r < 0)
             SOL_WRN("Flash write failed");
     }
@@ -145,6 +159,7 @@ sol_memmap_impl_perform_pending_writes(void *data)
     sol_vector_init(&map_internal->pending_writes,
         sizeof(struct pending_write_data));
 
+    printf("** sol_memmap_write_raw() -- now performing pending writes\n");
     SOL_VECTOR_FOREACH_IDX (&tmp_vector, pending, i) {
         sol_memmap_impl_write_raw((struct map_internal *)map_internal,
             pending->name, pending->entry, pending->mask, pending->blob,
@@ -173,6 +188,10 @@ sol_memmap_impl_init(void)
         SOL_WRN("SPI flash driver was not found!\n");
         return -ENOSYS;
     }
+
+    printf("flash_write_protection_set(false)\n");
+    r = flash_write_protection_set(flash_dev, false);
+    SOL_INT_CHECK(r, < 0, r);
 
     r = flash_write_protection_set(flash_dev, false);
     SOL_INT_CHECK(r, < 0, r);

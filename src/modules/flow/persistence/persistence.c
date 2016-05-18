@@ -170,6 +170,7 @@ storage_write(struct persist_data *mdata, void *data, size_t size, struct sol_fl
     cb_data->node = node;
     cb_data->send_packet = send_packet;
 
+    printf("about to storage_write()\n");
     r = mdata->storage->write(mdata->name, blob, write_cb, cb_data);
     SOL_INT_CHECK_GOTO(r, < 0, error);
 
@@ -188,6 +189,7 @@ error:
 static int
 storage_read(struct persist_data *mdata, struct sol_buffer *buf)
 {
+    printf("about to storage_read()\n");
     return mdata->storage->read(mdata->name, buf);
 }
 
@@ -212,7 +214,7 @@ persist_do(struct persist_data *mdata, struct sol_flow_node *node, void *value,
     if (mdata->packet_data_size)
         size = mdata->packet_data_size;
     else
-        size = strlen(value) + 1; //To include the null terminating char
+        size = strlen(value) + 1;  //To include the null terminating char
 
     if (mdata->value_ptr) {
         if (mdata->packet_data_size)
@@ -317,6 +319,8 @@ persist_open(struct sol_flow_node *node,
         return -EINVAL;
     }
 
+    printf("Storage name: %s (check that "
+        "an empty string is valid afterwards)\n", name);
     mdata->name = strdup(name);
     SOL_NULL_CHECK(mdata->name, -ENOMEM);
 
@@ -337,7 +341,8 @@ persist_open(struct sol_flow_node *node,
             sol_buffer_fini(&buf);
     }
     if (r == -ENOENT) {
-        /* No file. Send default value */
+        SOL_WRN("Error reading previous storage. Sending default value "
+            "on output port.");
         r = persist_reset(mdata, node);
         SOL_INT_CHECK_GOTO(r, < 0, err);
         return r;

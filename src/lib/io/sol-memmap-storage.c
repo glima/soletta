@@ -83,6 +83,7 @@ check_version(struct map_internal *map_internal)
     struct sol_blob *blob;
     int ret;
 
+    printf("check_version()\n");
     if (map_internal->checked)
         return true;
 
@@ -100,12 +101,14 @@ check_version(struct map_internal *map_internal)
     }
 
     ret = sol_memmap_impl_read_raw(map_internal, entry, mask, &buf);
+    printf("version read: %d (ret = %d)\n", version, ret);
     if (ret >= 0 && (version == 0 || version == 255)) {
         blob = sol_blob_new(&SOL_BLOB_TYPE_NO_FREE_DATA, NULL, &map_internal->map->version, sizeof(uint16_t));
         SOL_NULL_CHECK(blob, false);
 
         /* No version on file, we should be initialising it */
         version = map_internal->map->version;
+        printf("writing version %d\n", map_internal->map->version);
         if ((ret = sol_memmap_impl_write_raw(map_internal,
                 MEMMAP_VERSION_ENTRY, entry, mask, blob, version_write_cb,
                 NULL)) < 0) {
@@ -223,6 +226,7 @@ sol_memmap_write_raw(const char *name, struct sol_blob *blob,
     SOL_NULL_CHECK(name, -EINVAL);
     SOL_NULL_CHECK(blob, -EINVAL);
 
+    printf("** sol_memmap_write_raw()\n");
     if (!get_entry_metadata(name, &map_internal, &entry, &mask)) {
         SOL_WRN("No entry on memory map to property [%s]", name);
         return -ENOENT;
@@ -276,6 +280,7 @@ sol_memmap_read_raw(const char *name, struct sol_buffer *buffer)
     SOL_NULL_CHECK(name, -EINVAL);
     SOL_NULL_CHECK(buffer, -EINVAL);
 
+    printf("** sol_memmap_read_raw()\n");
     if (!get_entry_metadata(name, &map_internal, &entry, &mask)) {
         SOL_WRN("No entry on memory map to property [%s]", name);
         return -ENOENT;
@@ -287,6 +292,8 @@ sol_memmap_read_raw(const char *name, struct sol_buffer *buffer)
     if (read_from_pending(name, buffer))
         return 0;
 
+    printf("** sol_memmap_read_raw() -- now reading value"
+        " (after version check)\n");
     return sol_memmap_impl_read_raw(map_internal, entry, mask, buffer);
 }
 
